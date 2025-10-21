@@ -133,7 +133,12 @@
                     // Parse headers and data
                     header1 = jsonData[0];
                     header2 = jsonData[1];
-                    rawData = jsonData.slice(2);
+                    
+                    // Filter out completely blank rows (all values are empty, undefined, or "0")
+                    rawData = jsonData.slice(2).filter(row => {
+                        // Check if row has any non-blank, non-zero value
+                        return row.some(cell => cell && cell !== '0' && cell !== '');
+                    });
 
                     populateFilters();
                     renderTable();
