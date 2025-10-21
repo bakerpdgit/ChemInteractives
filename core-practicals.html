@@ -14,11 +14,11 @@
             margin-top: 20px;
         }
         .cell-y {
-            background-color: lightgreen;
+            background-color: lightgreen !important;
             text-align: center;
         }
         .cell-wt {
-            background-color: #ffc107;
+            background-color: #ffc107 !important;
             text-align: center;
         }
         .cell-blank {
@@ -220,7 +220,8 @@
             const headerRow1 = document.createElement('tr');
             visibleColumns.forEach(colIndex => {
                 const th = document.createElement('th');
-                th.textContent = header1[colIndex] || '';
+                const headerValue = header1[colIndex];
+                th.textContent = (headerValue && headerValue !== '0') ? headerValue : '';
                 headerRow1.appendChild(th);
             });
             thead.appendChild(headerRow1);
@@ -229,7 +230,8 @@
             const headerRow2 = document.createElement('tr');
             visibleColumns.forEach(colIndex => {
                 const th = document.createElement('th');
-                th.textContent = header2[colIndex] || '';
+                const headerValue = header2[colIndex];
+                th.textContent = (headerValue && headerValue !== '0') ? headerValue : '';
                 headerRow2.appendChild(th);
             });
             thead.appendChild(headerRow2);
