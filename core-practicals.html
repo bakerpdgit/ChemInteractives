@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Core Practicals - Chemistry Tools</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <!-- SheetJS for reading Excel files -->
+    <script src="xlsx.full.min.js"></script>
+    <style>
+        .table-wrapper {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        .cell-y {
+            background-color: lightgreen;
+            text-align: center;
+        }
+        .cell-wt {
+            background-color: #ffc107;
+            text-align: center;
+        }
+        .cell-blank {
+            text-align: center;
+        }
+        .filter-section {
+            margin-bottom: 20px;
+        }
+        table {
+            white-space: nowrap;
+        }
+        th {
+            position: sticky;
+            top: 0;
+            background-color: white;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="text-center mb-4">Core Practicals</h1>
+                <div class="text-center mb-3">
+                    <a href="index.html" class="btn btn-secondary">Back to Home</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Upload Section -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Upload Spreadsheet</h5>
+                        <input type="file" id="fileInput" class="form-control" accept=".xlsx,.xls">
+                        <small class="form-text text-muted">Upload an Excel file (.xlsx or .xls) with student core practical data</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="row filter-section" id="filterSection" style="display: none;">
+            <div class="col-md-3">
+                <label for="year12Filter" class="form-label">Year 12 Class:</label>
+                <select id="year12Filter" class="form-select">
+                    <option value="">All Classes</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="year13Filter" class="form-label">Year 13 Class:</label>
+                <select id="year13Filter" class="form-select">
+                    <option value="">All Classes</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="assignmentFilter" class="form-label">Assignment:</label>
+                <select id="assignmentFilter" class="form-select">
+                    <option value="">All Assignments</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="labelFilter" class="form-label">Label:</label>
+                <select id="labelFilter" class="form-select">
+                    <option value="">All Labels</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Data Table Section -->
+        <div class="row">
+            <div class="col-12">
+                <div class="table-wrapper">
+                    <table id="dataTable" class="table table-bordered table-hover" style="display: none;">
+                        <thead id="tableHead"></thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+    <script>
+        let rawData = [];
+        let header1 = []; // First header row (assignments like 1a, 2a, etc.)
+        let header2 = []; // Second header row (labels like CP1, CP2, etc.)
+
+        document.getElementById('fileInput').addEventListener('change', handleFile);
+
+        function handleFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1, defval: '0'});
+                    
+                    if (jsonData.length < 3) {
+                        alert('File must contain at least 2 header rows and 1 data row');
+                        return;
+                    }
+
+                    // Parse headers and data
+                    header1 = jsonData[0];
+                    header2 = jsonData[1];
+                    rawData = jsonData.slice(2);
+
+                    populateFilters();
+                    renderTable();
+                    
+                    document.getElementById('filterSection').style.display = 'flex';
+                    document.getElementById('dataTable').style.display = 'table';
+                } catch (error) {
+                    alert('Error reading file: ' + error.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function populateFilters() {
+            // Populate Year 12 and Year 13 class filters
+            const year12Classes = new Set();
+            const year13Classes = new Set();
+            const assignments = new Set();
+            const labels = new Set();
+
+            rawData.forEach(row => {
+                if (row[1] && row[1] !== '0') year12Classes.add(row[1]);
+                if (row[2] && row[2] !== '0') year13Classes.add(row[2]);
+            });
+
+            // Populate assignment and label filters from headers
+            for (let i = 3; i < header1.length; i++) {
+                if (header1[i] && header1[i] !== '0') assignments.add(header1[i]);
+                if (header2[i] && header2[i] !== '0') labels.add(header2[i]);
+            }
+
+            populateSelect('year12Filter', Array.from(year12Classes).sort());
+            populateSelect('year13Filter', Array.from(year13Classes).sort());
+            populateSelect('assignmentFilter', Array.from(assignments).sort());
+            populateSelect('labelFilter', Array.from(labels).sort());
+
+            // Add event listeners for filters
+            document.getElementById('year12Filter').addEventListener('change', renderTable);
+            document.getElementById('year13Filter').addEventListener('change', renderTable);
+            document.getElementById('assignmentFilter').addEventListener('change', renderTable);
+            document.getElementById('labelFilter').addEventListener('change', renderTable);
+        }
+
+        function populateSelect(selectId, options) {
+            const select = document.getElementById(selectId);
+            // Keep the first "All" option
+            select.innerHTML = '<option value="">All ' + select.options[0].text.split(' ')[1] + '</option>';
+            options.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option;
+                opt.textContent = option;
+                select.appendChild(opt);
+            });
+        }
+
+        function renderTable() {
+            const year12Filter = document.getElementById('year12Filter').value;
+            const year13Filter = document.getElementById('year13Filter').value;
+            const assignmentFilter = document.getElementById('assignmentFilter').value;
+            const labelFilter = document.getElementById('labelFilter').value;
+
+            // Filter rows by Year 12 and Year 13 classes
+            let filteredData = rawData.filter(row => {
+                const year12Match = !year12Filter || row[1] === year12Filter;
+                const year13Match = !year13Filter || row[2] === year13Filter;
+                return year12Match && year13Match;
+            });
+
+            // Filter columns by assignment and label
+            let visibleColumns = [0, 1, 2]; // Always show Surname, Year 12 Set, Year 13 Set
+            for (let i = 3; i < header1.length; i++) {
+                const assignmentMatch = !assignmentFilter || header1[i] === assignmentFilter;
+                const labelMatch = !labelFilter || header2[i] === labelFilter;
+                if (assignmentMatch && labelMatch) {
+                    visibleColumns.push(i);
+                }
+            }
+
+            // Render table headers
+            const thead = document.getElementById('tableHead');
+            thead.innerHTML = '';
+            
+            // First header row (assignments)
+            const headerRow1 = document.createElement('tr');
+            visibleColumns.forEach(colIndex => {
+                const th = document.createElement('th');
+                th.textContent = header1[colIndex] || '';
+                headerRow1.appendChild(th);
+            });
+            thead.appendChild(headerRow1);
+
+            // Second header row (labels)
+            const headerRow2 = document.createElement('tr');
+            visibleColumns.forEach(colIndex => {
+                const th = document.createElement('th');
+                th.textContent = header2[colIndex] || '';
+                headerRow2.appendChild(th);
+            });
+            thead.appendChild(headerRow2);
+
+            // Render table body
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            filteredData.forEach(row => {
+                const tr = document.createElement('tr');
+                visibleColumns.forEach(colIndex => {
+                    const td = document.createElement('td');
+                    const cellValue = row[colIndex] || '0';
+                    
+                    // Apply styling based on cell value
+                    if (colIndex > 2) { // Only for data columns, not name/class columns
+                        if (cellValue === 'y') {
+                            td.className = 'cell-y';
+                            td.textContent = 'y';
+                        } else if (cellValue === 'wt') {
+                            td.className = 'cell-wt';
+                            td.textContent = 'wt';
+                        } else {
+                            td.className = 'cell-blank';
+                            td.textContent = '';
+                        }
+                    } else {
+                        td.textContent = cellValue === '0' ? '' : cellValue;
+                    }
+                    
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>
