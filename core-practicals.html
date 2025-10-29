@@ -8,7 +8,41 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <!-- SheetJS for reading Excel files -->
     <script src="xlsx.full.min.js"></script>
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.31/dist/jspdf.plugin.autotable.min.js"></script>
+    <!-- JSZip for creating ZIP files -->
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <!-- FileSaver for downloading files -->
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
     <style>
+        .header-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .home-button {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2rem;
+            text-decoration: none;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        .home-button:hover {
+            opacity: 0.7;
+        }
+        .page-title {
+            flex: 1;
+            text-align: center;
+            margin: 0;
+        }
         .table-wrapper {
             overflow-x: auto;
             margin-top: 20px;
@@ -60,15 +94,20 @@
             margin-top: 20px;
             margin-bottom: 20px;
         }
+        .export-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="container-fluid mt-4">
         <div class="row">
             <div class="col-12">
-                <h1 class="text-center mb-4">Core Practicals</h1>
-                <div class="text-center mb-3">
-                    <a href="index.html" class="btn btn-secondary">Back to Home</a>
+                <div class="header-container">
+                    <a href="index.html" class="home-button" title="Home">🏠</a>
+                    <h1 class="page-title">Core Practicals</h1>
                 </div>
             </div>
         </div>
@@ -129,6 +168,10 @@
                         <thead id="tableHead"></thead>
                         <tbody id="tableBody"></tbody>
                     </table>
+                    <div class="export-buttons" id="classExportButtons" style="display: none;">
+                        <button id="exportCombinedBtn" class="btn btn-primary">Export Combined PDF</button>
+                        <button id="exportSeparateBtn" class="btn btn-primary">Export Separate PDFs (ZIP)</button>
+                    </div>
                 </div>
                 <!-- Student View -->
                 <div id="studentView">
@@ -144,7 +187,10 @@
                             <tbody id="studentTableBody"></tbody>
                         </table>
                     </div>
-                    <button id="backToGridBtn" class="btn btn-secondary mt-3">Back to Grid View</button>
+                    <div class="export-buttons">
+                        <button id="exportStudentBtn" class="btn btn-primary">Export PDF</button>
+                        <button id="backToGridBtn" class="btn btn-secondary">Back to Grid View</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -226,12 +272,21 @@
             populateSelect('labelFilter', Array.from(labels).sort());
 
             // Add event listeners for filters
-            document.getElementById('year12Filter').addEventListener('change', renderTable);
-            document.getElementById('year13Filter').addEventListener('change', renderTable);
+            document.getElementById('year12Filter').addEventListener('change', handleClassFilterChange);
+            document.getElementById('year13Filter').addEventListener('change', handleClassFilterChange);
             document.getElementById('studentFilter').addEventListener('change', handleStudentFilterChange);
             document.getElementById('assignmentFilter').addEventListener('change', renderTable);
             document.getElementById('labelFilter').addEventListener('change', renderTable);
             document.getElementById('backToGridBtn').addEventListener('click', backToGridView);
+            document.getElementById('exportStudentBtn').addEventListener('click', exportStudentPDF);
+            document.getElementById('exportCombinedBtn').addEventListener('click', exportCombinedPDF);
+            document.getElementById('exportSeparateBtn').addEventListener('click', exportSeparatePDFs);
+        }
+
+        function handleClassFilterChange() {
+            // Clear student selection when class filter changes
+            document.getElementById('studentFilter').value = '';
+            renderTable();
         }
 
         function populateSelect(selectId, options) {
@@ -345,6 +400,14 @@
             });
             
             document.getElementById('dataTable').style.display = 'table';
+            
+            // Show class export buttons if there are students in the filtered view
+            const classExportButtons = document.getElementById('classExportButtons');
+            if (filteredData.length > 0) {
+                classExportButtons.style.display = 'flex';
+            } else {
+                classExportButtons.style.display = 'none';
+            }
         }
 
         function handleStudentFilterChange() {
@@ -442,6 +505,186 @@
         function backToGridView() {
             document.getElementById('studentFilter').value = '';
             renderTable();
+        }
+
+        // PDF Export Functions
+        function getStudentData(studentName) {
+            const assignmentFilter = document.getElementById('assignmentFilter').value;
+            const labelFilter = document.getElementById('labelFilter').value;
+            
+            const studentRow = rawData.find(row => row[0] === studentName);
+            if (!studentRow) return null;
+            
+            const cpacMap = new Map();
+            
+            for (let i = 3; i < header1.length; i++) {
+                const cpac = header1[i];
+                const cp = header2[i];
+                const value = studentRow[i];
+                
+                const assignmentMatch = !assignmentFilter || cpac === assignmentFilter;
+                const labelMatch = !labelFilter || cp === labelFilter;
+                
+                if (assignmentMatch && labelMatch && cpac && cpac !== '0' && cp && cp !== '0') {
+                    if (value === 'y') {
+                        if (!cpacMap.has(cpac)) {
+                            cpacMap.set(cpac, []);
+                        }
+                        cpacMap.get(cpac).push(cp);
+                    }
+                }
+            }
+            
+            const allCpacs = new Set();
+            for (let i = 3; i < header1.length; i++) {
+                const cpac = header1[i];
+                const cp = header2[i];
+                const assignmentMatch = !assignmentFilter || cpac === assignmentFilter;
+                const labelMatch = !labelFilter || cp === labelFilter;
+                if (assignmentMatch && labelMatch && cpac && cpac !== '0') {
+                    allCpacs.add(cpac);
+                }
+            }
+            
+            return {
+                cpacMap: cpacMap,
+                allCpacs: Array.from(allCpacs).sort()
+            };
+        }
+
+        function generateStudentPDF(studentName) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            const studentData = getStudentData(studentName);
+            if (!studentData) {
+                alert('Student data not found');
+                return null;
+            }
+            
+            // Add title
+            doc.setFontSize(18);
+            doc.text(studentName, 14, 20);
+            
+            // Create table data
+            const tableData = [];
+            studentData.allCpacs.forEach(cpac => {
+                const achievedCPs = studentData.cpacMap.get(cpac) || [];
+                tableData.push([
+                    cpac,
+                    achievedCPs.join(', ')
+                ]);
+            });
+            
+            // Add table
+            doc.autoTable({
+                startY: 30,
+                head: [['CPAC', 'Achieved CPs']],
+                body: tableData,
+                theme: 'grid',
+                headStyles: { fillColor: [13, 110, 253] },
+                styles: { cellPadding: 5, fontSize: 10 },
+                columnStyles: {
+                    0: { cellWidth: 40 },
+                    1: { cellWidth: 'auto' }
+                }
+            });
+            
+            return doc;
+        }
+
+        function exportStudentPDF() {
+            const studentName = document.getElementById('studentViewHeading').textContent;
+            const doc = generateStudentPDF(studentName);
+            if (doc) {
+                const filename = `${studentName.replace(/[^a-zA-Z0-9]/g, '_')}_CorePracticals.pdf`;
+                doc.save(filename);
+            }
+        }
+
+        function getFilteredStudents() {
+            const year12Filter = document.getElementById('year12Filter').value;
+            const year13Filter = document.getElementById('year13Filter').value;
+            
+            return rawData.filter(row => {
+                const year12Match = !year12Filter || row[1] === year12Filter;
+                const year13Match = !year13Filter || row[2] === year13Filter;
+                return year12Match && year13Match;
+            }).map(row => row[0]).filter(name => name && name !== '0');
+        }
+
+        function exportCombinedPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            const students = getFilteredStudents();
+            if (students.length === 0) {
+                alert('No students to export');
+                return;
+            }
+            
+            students.forEach((studentName, index) => {
+                if (index > 0) {
+                    doc.addPage();
+                }
+                
+                const studentData = getStudentData(studentName);
+                if (!studentData) return;
+                
+                // Add title
+                doc.setFontSize(18);
+                doc.text(studentName, 14, 20);
+                
+                // Create table data
+                const tableData = [];
+                studentData.allCpacs.forEach(cpac => {
+                    const achievedCPs = studentData.cpacMap.get(cpac) || [];
+                    tableData.push([
+                        cpac,
+                        achievedCPs.join(', ')
+                    ]);
+                });
+                
+                // Add table
+                doc.autoTable({
+                    startY: 30,
+                    head: [['CPAC', 'Achieved CPs']],
+                    body: tableData,
+                    theme: 'grid',
+                    headStyles: { fillColor: [13, 110, 253] },
+                    styles: { cellPadding: 5, fontSize: 10 },
+                    columnStyles: {
+                        0: { cellWidth: 40 },
+                        1: { cellWidth: 'auto' }
+                    }
+                });
+            });
+            
+            doc.save('CorePracticals_Combined.pdf');
+        }
+
+        async function exportSeparatePDFs() {
+            const students = getFilteredStudents();
+            if (students.length === 0) {
+                alert('No students to export');
+                return;
+            }
+            
+            const zip = new JSZip();
+            
+            students.forEach(studentName => {
+                const doc = generateStudentPDF(studentName);
+                if (doc) {
+                    const pdfBlob = doc.output('blob');
+                    const filename = `${studentName.replace(/[^a-zA-Z0-9]/g, '_')}_CorePracticals.pdf`;
+                    zip.file(filename, pdfBlob);
+                }
+            });
+            
+            // Generate and download the ZIP file
+            zip.generateAsync({ type: 'blob' }).then(function(content) {
+                saveAs(content, 'CorePracticals_All.zip');
+            });
         }
     </script>
 </body>
