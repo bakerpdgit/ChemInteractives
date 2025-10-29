@@ -9,6 +9,7 @@
     <!-- SheetJS for reading Excel files -->
     <script src="xlsx.full.min.js"></script>
     <!-- jsPDF for PDF generation -->
+    <!-- Note: Consider adding integrity hashes for production use to ensure library integrity -->
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.31/dist/jspdf.plugin.autotable.min.js"></script>
     <!-- JSZip for creating ZIP files -->
@@ -508,6 +509,10 @@
         }
 
         // PDF Export Functions
+        function sanitizeFilename(name) {
+            return name.replace(/[^a-zA-Z0-9]/g, '_');
+        }
+
         function getStudentData(studentName) {
             const assignmentFilter = document.getElementById('assignmentFilter').value;
             const labelFilter = document.getElementById('labelFilter').value;
@@ -597,7 +602,7 @@
             const studentName = document.getElementById('studentViewHeading').textContent;
             const doc = generateStudentPDF(studentName);
             if (doc) {
-                const filename = `${studentName.replace(/[^a-zA-Z0-9]/g, '_')}_CorePracticals.pdf`;
+                const filename = `${sanitizeFilename(studentName)}_CorePracticals.pdf`;
                 doc.save(filename);
             }
         }
@@ -672,19 +677,19 @@
             
             const zip = new JSZip();
             
-            students.forEach(studentName => {
+            // Use for...of loop with async/await for better performance with large lists
+            for (const studentName of students) {
                 const doc = generateStudentPDF(studentName);
                 if (doc) {
                     const pdfBlob = doc.output('blob');
-                    const filename = `${studentName.replace(/[^a-zA-Z0-9]/g, '_')}_CorePracticals.pdf`;
+                    const filename = `${sanitizeFilename(studentName)}_CorePracticals.pdf`;
                     zip.file(filename, pdfBlob);
                 }
-            });
+            }
             
             // Generate and download the ZIP file
-            zip.generateAsync({ type: 'blob' }).then(function(content) {
-                saveAs(content, 'CorePracticals_All.zip');
-            });
+            const content = await zip.generateAsync({ type: 'blob' });
+            saveAs(content, 'CorePracticals_All.zip');
         }
     </script>
 </body>
