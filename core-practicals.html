@@ -330,7 +330,11 @@
                     } else if (colIndex === 0) {
                         // Make student name a clickable link
                         const studentName = cellValue === '0' ? '' : cellValue;
-                        td.innerHTML = `<span class="student-name-link" onclick="showStudentView('${studentName.replace(/'/g, "\\'")}')">${studentName}</span>`;
+                        const span = document.createElement('span');
+                        span.className = 'student-name-link';
+                        span.textContent = studentName;
+                        span.addEventListener('click', () => showStudentView(studentName));
+                        td.appendChild(span);
                     } else {
                         td.textContent = cellValue === '0' ? '' : cellValue;
                     }
