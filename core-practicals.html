@@ -49,7 +49,7 @@
             margin-top: 20px;
         }
         .cell-y {
-            background-color: lightgreen !important;
+            background-color: #90ee90 !important;
             text-align: center;
         }
         .cell-wt {
@@ -533,10 +533,16 @@
 
         function getCpStatusFromValue(value) {
             // Return status if it's y, wt, or n, otherwise return empty string
-            if (value === 'y' || value === 'wt' || value === 'n') {
-                return value;
-            }
-            return '';
+            const validStatuses = new Set(['y', 'wt', 'n']);
+            return validStatuses.has(value) ? value : '';
+        }
+
+        function formatCpWithStatus(cp, status) {
+            // Format CP name with status indicator for PDF export
+            if (status === 'y') return `${cp} (✓)`;
+            if (status === 'wt') return `${cp} (WT)`;
+            if (status === 'n') return `${cp} (✗)`;
+            return cp;
         }
 
         function getStudentData(studentName) {
@@ -591,12 +597,7 @@
             studentData.allCpacs.forEach(cpac => {
                 const cpData = studentData.cpacMap.get(cpac) || [];
                 // Format CPs with status indicators
-                const cpText = cpData.map(({ cp, status }) => {
-                    if (status === 'y') return `${cp} (✓)`;
-                    if (status === 'wt') return `${cp} (WT)`;
-                    if (status === 'n') return `${cp} (✗)`;
-                    return cp;
-                }).join(', ');
+                const cpText = cpData.map(({ cp, status }) => formatCpWithStatus(cp, status)).join(', ');
                 tableData.push([cpac, cpText]);
             });
             
@@ -664,12 +665,7 @@
                 studentData.allCpacs.forEach(cpac => {
                     const cpData = studentData.cpacMap.get(cpac) || [];
                     // Format CPs with status indicators
-                    const cpText = cpData.map(({ cp, status }) => {
-                        if (status === 'y') return `${cp} (✓)`;
-                        if (status === 'wt') return `${cp} (WT)`;
-                        if (status === 'n') return `${cp} (✗)`;
-                        return cp;
-                    }).join(', ');
+                    const cpText = cpData.map(({ cp, status }) => formatCpWithStatus(cp, status)).join(', ');
                     tableData.push([cpac, cpText]);
                 });
                 
