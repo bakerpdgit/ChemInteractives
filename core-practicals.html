@@ -479,10 +479,7 @@
                         cpacMap.set(cpac, []);
                     }
                     // Store CP with its status (y, wt, n, or blank)
-                    let status = '';
-                    if (value === 'y' || value === 'wt' || value === 'n') {
-                        status = value;
-                    }
+                    const status = getCpStatusFromValue(value);
                     cpacMap.get(cpac).push({ cp: cp, status: status });
                 }
             }
@@ -534,6 +531,14 @@
             return name.replace(/[^a-zA-Z0-9]/g, '_');
         }
 
+        function getCpStatusFromValue(value) {
+            // Return status if it's y, wt, or n, otherwise return empty string
+            if (value === 'y' || value === 'wt' || value === 'n') {
+                return value;
+            }
+            return '';
+        }
+
         function getStudentData(studentName) {
             const assignmentFilter = document.getElementById('assignmentFilter').value;
             const labelFilter = document.getElementById('labelFilter').value;
@@ -556,10 +561,7 @@
                         cpacMap.set(cpac, []);
                     }
                     // Store CP with its status (y, wt, n, or blank)
-                    let status = '';
-                    if (value === 'y' || value === 'wt' || value === 'n') {
-                        status = value;
-                    }
+                    const status = getCpStatusFromValue(value);
                     cpacMap.get(cpac).push({ cp: cp, status: status });
                 }
             }
