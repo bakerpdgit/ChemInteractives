@@ -56,6 +56,10 @@
             background-color: #ffc107 !important;
             text-align: center;
         }
+        .cell-n {
+            background-color: #dc3545 !important;
+            text-align: center;
+        }
         .cell-blank {
             text-align: center;
         }
@@ -79,6 +83,23 @@
             margin: 2px;
             border-radius: 16px;
             font-size: 0.875rem;
+        }
+        .cp-badge-y {
+            background-color: #28a745;
+            color: white;
+        }
+        .cp-badge-wt {
+            background-color: #ffc107;
+            color: black;
+        }
+        .cp-badge-n {
+            background-color: #dc3545;
+            color: white;
+        }
+        .cp-badge-blank {
+            background-color: white;
+            color: black;
+            border: 1px solid #dee2e6;
         }
         .student-name-link {
             cursor: pointer;
@@ -182,7 +203,7 @@
                             <thead>
                                 <tr>
                                     <th>CPAC</th>
-                                    <th>Achieved CPs</th>
+                                    <th>CPs</th>
                                 </tr>
                             </thead>
                             <tbody id="studentTableBody"></tbody>
@@ -379,6 +400,9 @@
                         } else if (cellValue === 'wt') {
                             td.className = 'cell-wt';
                             td.textContent = 'wt';
+                        } else if (cellValue === 'n') {
+                            td.className = 'cell-n';
+                            td.textContent = 'n';
                         } else {
                             td.className = 'cell-blank';
                             td.textContent = '';
@@ -438,7 +462,7 @@
                 return;
             }
             
-            // Build a map of CPAC -> achieved CPs
+            // Build a map of CPAC -> CPs with their statuses
             const cpacMap = new Map();
             
             for (let i = 3; i < header1.length; i++) {
@@ -451,30 +475,20 @@
                 const labelMatch = !labelFilter || cp === labelFilter;
                 
                 if (assignmentMatch && labelMatch && cpac && cpac !== '0' && cp && cp !== '0') {
-                    // Only include if marked as 'y'
-                    if (value === 'y') {
-                        if (!cpacMap.has(cpac)) {
-                            cpacMap.set(cpac, []);
-                        }
-                        cpacMap.get(cpac).push(cp);
+                    if (!cpacMap.has(cpac)) {
+                        cpacMap.set(cpac, []);
                     }
-                }
-            }
-            
-            // Get all unique CPACs (considering filters)
-            const allCpacs = new Set();
-            for (let i = 3; i < header1.length; i++) {
-                const cpac = header1[i];
-                const cp = header2[i];
-                const assignmentMatch = !assignmentFilter || cpac === assignmentFilter;
-                const labelMatch = !labelFilter || cp === labelFilter;
-                if (assignmentMatch && labelMatch && cpac && cpac !== '0') {
-                    allCpacs.add(cpac);
+                    // Store CP with its status (y, wt, n, or blank)
+                    let status = '';
+                    if (value === 'y' || value === 'wt' || value === 'n') {
+                        status = value;
+                    }
+                    cpacMap.get(cpac).push({ cp: cp, status: status });
                 }
             }
             
             // Sort CPACs
-            const sortedCpacs = Array.from(allCpacs).sort();
+            const sortedCpacs = Array.from(cpacMap.keys()).sort();
             
             // Render student table
             const tbody = document.getElementById('studentTableBody');
@@ -488,15 +502,22 @@
                 tr.appendChild(cpacCell);
                 
                 const cpsCell = document.createElement('td');
-                const achievedCPs = cpacMap.get(cpac) || [];
-                if (achievedCPs.length > 0) {
-                    achievedCPs.forEach(cp => {
-                        const badge = document.createElement('span');
-                        badge.className = 'cp-badge';
-                        badge.textContent = cp;
-                        cpsCell.appendChild(badge);
-                    });
-                }
+                const cpData = cpacMap.get(cpac) || [];
+                cpData.forEach(({ cp, status }) => {
+                    const badge = document.createElement('span');
+                    badge.className = 'cp-badge';
+                    if (status === 'y') {
+                        badge.className += ' cp-badge-y';
+                    } else if (status === 'wt') {
+                        badge.className += ' cp-badge-wt';
+                    } else if (status === 'n') {
+                        badge.className += ' cp-badge-n';
+                    } else {
+                        badge.className += ' cp-badge-blank';
+                    }
+                    badge.textContent = cp;
+                    cpsCell.appendChild(badge);
+                });
                 tr.appendChild(cpsCell);
                 
                 tbody.appendChild(tr);
@@ -531,29 +552,21 @@
                 const labelMatch = !labelFilter || cp === labelFilter;
                 
                 if (assignmentMatch && labelMatch && cpac && cpac !== '0' && cp && cp !== '0') {
-                    if (value === 'y') {
-                        if (!cpacMap.has(cpac)) {
-                            cpacMap.set(cpac, []);
-                        }
-                        cpacMap.get(cpac).push(cp);
+                    if (!cpacMap.has(cpac)) {
+                        cpacMap.set(cpac, []);
                     }
-                }
-            }
-            
-            const allCpacs = new Set();
-            for (let i = 3; i < header1.length; i++) {
-                const cpac = header1[i];
-                const cp = header2[i];
-                const assignmentMatch = !assignmentFilter || cpac === assignmentFilter;
-                const labelMatch = !labelFilter || cp === labelFilter;
-                if (assignmentMatch && labelMatch && cpac && cpac !== '0') {
-                    allCpacs.add(cpac);
+                    // Store CP with its status (y, wt, n, or blank)
+                    let status = '';
+                    if (value === 'y' || value === 'wt' || value === 'n') {
+                        status = value;
+                    }
+                    cpacMap.get(cpac).push({ cp: cp, status: status });
                 }
             }
             
             return {
                 cpacMap: cpacMap,
-                allCpacs: Array.from(allCpacs).sort()
+                allCpacs: Array.from(cpacMap.keys()).sort()
             };
         }
 
@@ -574,17 +587,21 @@
             // Create table data
             const tableData = [];
             studentData.allCpacs.forEach(cpac => {
-                const achievedCPs = studentData.cpacMap.get(cpac) || [];
-                tableData.push([
-                    cpac,
-                    achievedCPs.join(', ')
-                ]);
+                const cpData = studentData.cpacMap.get(cpac) || [];
+                // Format CPs with status indicators
+                const cpText = cpData.map(({ cp, status }) => {
+                    if (status === 'y') return `${cp} (✓)`;
+                    if (status === 'wt') return `${cp} (WT)`;
+                    if (status === 'n') return `${cp} (✗)`;
+                    return cp;
+                }).join(', ');
+                tableData.push([cpac, cpText]);
             });
             
             // Add table
             doc.autoTable({
                 startY: 30,
-                head: [['CPAC', 'Achieved CPs']],
+                head: [['CPAC', 'CPs']],
                 body: tableData,
                 theme: 'grid',
                 headStyles: { fillColor: [13, 110, 253] },
@@ -643,17 +660,21 @@
                 // Create table data
                 const tableData = [];
                 studentData.allCpacs.forEach(cpac => {
-                    const achievedCPs = studentData.cpacMap.get(cpac) || [];
-                    tableData.push([
-                        cpac,
-                        achievedCPs.join(', ')
-                    ]);
+                    const cpData = studentData.cpacMap.get(cpac) || [];
+                    // Format CPs with status indicators
+                    const cpText = cpData.map(({ cp, status }) => {
+                        if (status === 'y') return `${cp} (✓)`;
+                        if (status === 'wt') return `${cp} (WT)`;
+                        if (status === 'n') return `${cp} (✗)`;
+                        return cp;
+                    }).join(', ');
+                    tableData.push([cpac, cpText]);
                 });
                 
                 // Add table
                 doc.autoTable({
                     startY: 30,
-                    head: [['CPAC', 'Achieved CPs']],
+                    head: [['CPAC', 'CPs']],
                     body: tableData,
                     theme: 'grid',
                     headStyles: { fillColor: [13, 110, 253] },
