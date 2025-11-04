@@ -502,16 +502,7 @@
                 const cpData = cpacMap.get(cpac) || [];
                 cpData.forEach(({ cp, status }) => {
                     const badge = document.createElement('span');
-                    badge.className = 'cp-badge';
-                    if (status === 'y') {
-                        badge.className += ' cp-badge-y';
-                    } else if (status === 'wt') {
-                        badge.className += ' cp-badge-wt';
-                    } else if (status === 'n') {
-                        badge.className += ' cp-badge-n';
-                    } else {
-                        badge.className += ' cp-badge-blank';
-                    }
+                    badge.className = `cp-badge cp-badge-${status || 'blank'}`;
                     badge.textContent = cp;
                     cpsCell.appendChild(badge);
                 });
@@ -531,10 +522,11 @@
             return name.replace(/[^a-zA-Z0-9]/g, '_');
         }
 
+        const VALID_CP_STATUSES = new Set(['y', 'wt', 'n']);
+
         function getCpStatusFromValue(value) {
             // Return status if it's y, wt, or n, otherwise return empty string
-            const validStatuses = new Set(['y', 'wt', 'n']);
-            return validStatuses.has(value) ? value : '';
+            return VALID_CP_STATUSES.has(value) ? value : '';
         }
 
         function formatCpWithStatus(cp, status) {
