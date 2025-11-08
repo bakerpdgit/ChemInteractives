@@ -570,6 +570,20 @@
             };
         }
 
+        function getColorForStatus(status) {
+            // Return RGB color arrays matching the HTML view colors
+            if (status === 'y') return [40, 167, 69];      // Green (#28a745)
+            if (status === 'wt') return [255, 193, 7];     // Yellow (#ffc107)
+            if (status === 'n') return [220, 53, 69];      // Red (#dc3545)
+            return [255, 255, 255];                         // White for blank
+        }
+
+        function getTextColorForStatus(status) {
+            // Return text color (black or white) for readability
+            if (status === 'wt' || !status) return [0, 0, 0];  // Black text for yellow and white backgrounds
+            return [255, 255, 255];                              // White text for green and red backgrounds
+        }
+
         function generateStudentPDF(studentName) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
@@ -584,16 +598,14 @@
             doc.setFontSize(18);
             doc.text(studentName, 14, 20);
             
-            // Create table data
+            // Create table data with CP objects for custom rendering
             const tableData = [];
             studentData.allCpacs.forEach(cpac => {
                 const cpData = studentData.cpacMap.get(cpac) || [];
-                // Format CPs with status indicators
-                const cpText = cpData.map(({ cp, status }) => formatCpWithStatus(cp, status)).join(', ');
-                tableData.push([cpac, cpText]);
+                tableData.push([cpac, cpData]);
             });
             
-            // Add table
+            // Add table with custom cell rendering for colored badges
             doc.autoTable({
                 startY: 30,
                 head: [['CPAC', 'CPs']],
@@ -604,6 +616,68 @@
                 columnStyles: {
                     0: { cellWidth: 40 },
                     1: { cellWidth: 'auto' }
+                },
+                didDrawCell: function(data) {
+                    // Custom rendering for CP badges in the second column
+                    if (data.column.index === 1 && data.section === 'body') {
+                        const cpData = data.cell.raw;
+                        if (Array.isArray(cpData) && cpData.length > 0) {
+                            const cell = data.cell;
+                            const cellX = cell.x;
+                            const cellY = cell.y;
+                            const cellPadding = 3;
+                            
+                            let xOffset = cellX + cellPadding;
+                            const yOffset = cellY + cellPadding;
+                            const badgeHeight = 6;
+                            const badgePadding = 2;
+                            const badgeMargin = 2;
+                            
+                            cpData.forEach(({ cp, status }) => {
+                                // Measure text width
+                                doc.setFontSize(9);
+                                const textWidth = doc.getTextWidth(cp);
+                                const badgeWidth = textWidth + (badgePadding * 2);
+                                
+                                // Check if badge fits in current line, if not wrap to next line
+                                if (xOffset + badgeWidth > cell.x + cell.width - cellPadding) {
+                                    xOffset = cellX + cellPadding;
+                                }
+                                
+                                // Draw badge background with rounded corners
+                                const bgColor = getColorForStatus(status);
+                                doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
+                                
+                                // Draw rounded rectangle for badge
+                                const radius = 2;
+                                doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'F');
+                                
+                                // Draw border for blank badges
+                                if (!status) {
+                                    doc.setDrawColor(222, 226, 230);  // Light gray border (#dee2e6)
+                                    doc.setLineWidth(0.2);
+                                    doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
+                                }
+                                
+                                // Draw text
+                                const textColor = getTextColorForStatus(status);
+                                doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+                                doc.text(cp, xOffset + badgePadding, yOffset + badgeHeight - 1.5);
+                                
+                                xOffset += badgeWidth + badgeMargin;
+                            });
+                            
+                            // Reset colors
+                            doc.setTextColor(0, 0, 0);
+                            doc.setDrawColor(0, 0, 0);
+                        }
+                    }
+                },
+                willDrawCell: function(data) {
+                    // Clear default text rendering for CP column
+                    if (data.column.index === 1 && data.section === 'body') {
+                        data.cell.text = '';
+                    }
                 }
             });
             
@@ -652,16 +726,14 @@
                 doc.setFontSize(18);
                 doc.text(studentName, 14, 20);
                 
-                // Create table data
+                // Create table data with CP objects for custom rendering
                 const tableData = [];
                 studentData.allCpacs.forEach(cpac => {
                     const cpData = studentData.cpacMap.get(cpac) || [];
-                    // Format CPs with status indicators
-                    const cpText = cpData.map(({ cp, status }) => formatCpWithStatus(cp, status)).join(', ');
-                    tableData.push([cpac, cpText]);
+                    tableData.push([cpac, cpData]);
                 });
                 
-                // Add table
+                // Add table with custom cell rendering for colored badges
                 doc.autoTable({
                     startY: 30,
                     head: [['CPAC', 'CPs']],
@@ -672,6 +744,68 @@
                     columnStyles: {
                         0: { cellWidth: 40 },
                         1: { cellWidth: 'auto' }
+                    },
+                    didDrawCell: function(data) {
+                        // Custom rendering for CP badges in the second column
+                        if (data.column.index === 1 && data.section === 'body') {
+                            const cpData = data.cell.raw;
+                            if (Array.isArray(cpData) && cpData.length > 0) {
+                                const cell = data.cell;
+                                const cellX = cell.x;
+                                const cellY = cell.y;
+                                const cellPadding = 3;
+                                
+                                let xOffset = cellX + cellPadding;
+                                const yOffset = cellY + cellPadding;
+                                const badgeHeight = 6;
+                                const badgePadding = 2;
+                                const badgeMargin = 2;
+                                
+                                cpData.forEach(({ cp, status }) => {
+                                    // Measure text width
+                                    doc.setFontSize(9);
+                                    const textWidth = doc.getTextWidth(cp);
+                                    const badgeWidth = textWidth + (badgePadding * 2);
+                                    
+                                    // Check if badge fits in current line, if not wrap to next line
+                                    if (xOffset + badgeWidth > cell.x + cell.width - cellPadding) {
+                                        xOffset = cellX + cellPadding;
+                                    }
+                                    
+                                    // Draw badge background with rounded corners
+                                    const bgColor = getColorForStatus(status);
+                                    doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
+                                    
+                                    // Draw rounded rectangle for badge
+                                    const radius = 2;
+                                    doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'F');
+                                    
+                                    // Draw border for blank badges
+                                    if (!status) {
+                                        doc.setDrawColor(222, 226, 230);  // Light gray border (#dee2e6)
+                                        doc.setLineWidth(0.2);
+                                        doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
+                                    }
+                                    
+                                    // Draw text
+                                    const textColor = getTextColorForStatus(status);
+                                    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+                                    doc.text(cp, xOffset + badgePadding, yOffset + badgeHeight - 1.5);
+                                    
+                                    xOffset += badgeWidth + badgeMargin;
+                                });
+                                
+                                // Reset colors
+                                doc.setTextColor(0, 0, 0);
+                                doc.setDrawColor(0, 0, 0);
+                            }
+                        }
+                    },
+                    willDrawCell: function(data) {
+                        // Clear default text rendering for CP column
+                        if (data.column.index === 1 && data.section === 'body') {
+                            data.cell.text = '';
+                        }
                     }
                 });
             });
