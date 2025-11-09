@@ -228,6 +228,14 @@
 
         document.getElementById('fileInput').addEventListener('change', handleFile);
 
+        const cpacDescriptions = {
+            "CPAC 1": "Follows written procedures\n(a) Correctly follows instructions to carry out the experimental techniques or procedures.",
+            "CPAC 2": "Applies investigative approaches and methods when using instruments and equipment\n(a) Correctly uses appropriate instrumentation, apparatus and materials (including ICT) to carry out investigative activities, experimental techniques and procedures with minimal assistance or prompting.\n(b) Carries out techniques or procedures methodically, in sequence and in combination, identifying practical issues and making adjustments when necessary.\n(c) Identifies and controls significant quantitative variables where applicable, and plans approaches to take account of variables that cannot readily be controlled.\n(d) Selects appropriate equipment and measurement strategies in order to ensure suitably accurate results.",
+            "CPAC 3": "Safely uses a range of practical equipment and materials\n(a) Identifies hazards and assesses risks associated with these hazards, making safety adjustments as necessary, when carrying out experimental techniques and procedures in the lab or field.\n(b) Uses appropriate safety equipment and approaches to minimise risks with minimal prompting.",
+            "CPAC 4": "Makes and records observations\n(a) Makes accurate observations relevant to the experimental or investigative procedure.\n(b) Obtains accurate, precise and sufficient data for experimental and investigative procedures and records this methodically using appropriate units and conventions.",
+            "CPAC 5": "Researches, references and reports\n(a) Uses appropriate software and/or tools to process data, carry out research and report findings.\n(b) Sources of information are cited demonstrating that research has taken place, supporting planning and conclusions."
+        };
+
         function handleFile(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -602,20 +610,22 @@
             const tableData = [];
             studentData.allCpacs.forEach(cpac => {
                 const cpData = studentData.cpacMap.get(cpac) || [];
-                tableData.push([cpac, cpData]);
+                const description = cpacDescriptions['CPAC ' + cpac.charAt(0)] || '';
+                tableData.push([cpac, cpData, description]);
             });
             
             // Add table with custom cell rendering for colored badges
             doc.autoTable({
                 startY: 30,
-                head: [['CPAC', 'CPs']],
+                head: [['CPAC', 'CPs', 'Description']],
                 body: tableData,
                 theme: 'grid',
                 headStyles: { fillColor: [13, 110, 253] },
-                styles: { cellPadding: 5, fontSize: 10 },
+                styles: { cellPadding: 2, fontSize: 10 },
                 columnStyles: {
-                    0: { cellWidth: 40 },
-                    1: { cellWidth: 'auto' }
+                    0: { cellWidth: 20 },
+                    1: { cellWidth: 60 },
+                    2: { cellWidth: 'auto', fontSize: 7 }
                 },
                 didDrawCell: function(data) {
                     // Custom rendering for CP badges in the second column
@@ -730,20 +740,22 @@
                 const tableData = [];
                 studentData.allCpacs.forEach(cpac => {
                     const cpData = studentData.cpacMap.get(cpac) || [];
-                    tableData.push([cpac, cpData]);
+                    const description = cpacDescriptions['CPAC ' + cpac.charAt(0)] || '';
+                    tableData.push([cpac, cpData, description]);
                 });
                 
                 // Add table with custom cell rendering for colored badges
                 doc.autoTable({
                     startY: 30,
-                    head: [['CPAC', 'CPs']],
+                    head: [['CPAC', 'CPs', 'Description']],
                     body: tableData,
                     theme: 'grid',
                     headStyles: { fillColor: [13, 110, 253] },
-                    styles: { cellPadding: 5, fontSize: 10 },
+                    styles: { cellPadding: 2, fontSize: 10 },
                     columnStyles: {
-                        0: { cellWidth: 40 },
-                        1: { cellWidth: 'auto' }
+                        0: { cellWidth: 20 },
+                        1: { cellWidth: 60 },
+                        2: { cellWidth: 'auto', fontSize: 7 }
                     },
                     didDrawCell: function(data) {
                         // Custom rendering for CP badges in the second column
