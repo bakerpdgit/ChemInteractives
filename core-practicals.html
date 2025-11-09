@@ -91,10 +91,12 @@
         .cp-badge-wt {
             background-color: #ffc107;
             color: black;
+            border: 2px dashed black;
         }
         .cp-badge-n {
             background-color: #dc3545;
             color: white;
+            border: 2px solid black;
         }
         .cp-badge-blank {
             background-color: white;
@@ -664,8 +666,18 @@
                                 
                                 // Draw border for blank badges
                                 if (!status) {
-                                    doc.setDrawColor(222, 226, 230);  // Light gray border (#dee2e6)
+                                    doc.setDrawColor(222, 226, 230); // Light gray border (#dee2e6)
                                     doc.setLineWidth(0.2);
+                                    doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
+                                } else if (status === 'wt') {
+                                    doc.setDrawColor(0, 0, 0); // Black border
+                                    doc.setLineWidth(0.5);
+                                    doc.setLineDashPattern([1, 0.5], 0); // Dashed line
+                                    doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
+                                    doc.setLineDashPattern([], 0); // Reset dash pattern
+                                } else if (status === 'n') {
+                                    doc.setDrawColor(0, 0, 0); // Black border
+                                    doc.setLineWidth(0.5);
                                     doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
                                 }
                                 
@@ -796,6 +808,16 @@
                                     if (!status) {
                                         doc.setDrawColor(222, 226, 230);  // Light gray border (#dee2e6)
                                         doc.setLineWidth(0.2);
+                                        doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
+                                    } else if (status === 'wt') {
+                                        doc.setDrawColor(0, 0, 0); // Black border
+                                        doc.setLineWidth(0.5);
+                                        doc.setLineDashPattern([1, 0.5], 0); // Dashed line
+                                        doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
+                                        doc.setLineDashPattern([], 0); // Reset dash pattern
+                                    } else if (status === 'n') {
+                                        doc.setDrawColor(0, 0, 0); // Black border
+                                        doc.setLineWidth(0.5);
                                         doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
                                     }
                                     
