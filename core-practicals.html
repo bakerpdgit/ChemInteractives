@@ -622,7 +622,7 @@
                 body: tableData,
                 theme: 'grid',
                 headStyles: { fillColor: [13, 110, 253] },
-                styles: { cellPadding: 2, fontSize: 10 },
+                styles: { cellPadding: 2, fontSize: 10, minCellHeight: 15 },
                 columnStyles: {
                     0: { cellWidth: 20 },
                     1: { cellWidth: 'auto' }
@@ -634,12 +634,11 @@
                         if (Array.isArray(cpData) && cpData.length > 0) {
                             const cell = data.cell;
                             const cellX = cell.x;
-                            const cellY = cell.y;
                             const cellPadding = 3;
                             
                             let xOffset = cellX + cellPadding;
-                            const yOffset = cellY + cellPadding;
                             const badgeHeight = 6;
+                            const yOffset = cell.y + (cell.height - badgeHeight) / 2;
                             const badgePadding = 2;
                             const badgeMargin = 2;
                             
@@ -760,7 +759,7 @@
                     body: tableData,
                     theme: 'grid',
                     headStyles: { fillColor: [13, 110, 253] },
-                    styles: { cellPadding: 2, fontSize: 10 },
+                styles: { cellPadding: 2, fontSize: 10, minCellHeight: 15 },
                     columnStyles: {
                         0: { cellWidth: 20 },
                         1: { cellWidth: 'auto' }
@@ -772,12 +771,11 @@
                             if (Array.isArray(cpData) && cpData.length > 0) {
                                 const cell = data.cell;
                                 const cellX = cell.x;
-                                const cellY = cell.y;
                                 const cellPadding = 3;
                                 
                                 let xOffset = cellX + cellPadding;
-                                const yOffset = cellY + cellPadding;
                                 const badgeHeight = 6;
+                                const yOffset = cell.y + (cell.height - badgeHeight) / 2;
                                 const badgePadding = 2;
                                 const badgeMargin = 2;
                                 
