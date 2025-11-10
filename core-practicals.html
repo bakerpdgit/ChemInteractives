@@ -612,22 +612,20 @@
             const tableData = [];
             studentData.allCpacs.forEach(cpac => {
                 const cpData = studentData.cpacMap.get(cpac) || [];
-                const description = cpacDescriptions['CPAC ' + cpac.charAt(0)] || '';
-                tableData.push([cpac, cpData, description]);
+                tableData.push([cpac, cpData]);
             });
             
             // Add table with custom cell rendering for colored badges
             doc.autoTable({
                 startY: 30,
-                head: [['CPAC', 'CPs', 'Description']],
+                head: [['CPAC', 'CPs']],
                 body: tableData,
                 theme: 'grid',
                 headStyles: { fillColor: [13, 110, 253] },
                 styles: { cellPadding: 2, fontSize: 10 },
                 columnStyles: {
                     0: { cellWidth: 20 },
-                    1: { cellWidth: 60 },
-                    2: { cellWidth: 'auto', fontSize: 7 }
+                    1: { cellWidth: 'auto' }
                 },
                 didDrawCell: function(data) {
                     // Custom rendering for CP badges in the second column
@@ -752,22 +750,20 @@
                 const tableData = [];
                 studentData.allCpacs.forEach(cpac => {
                     const cpData = studentData.cpacMap.get(cpac) || [];
-                    const description = cpacDescriptions['CPAC ' + cpac.charAt(0)] || '';
-                    tableData.push([cpac, cpData, description]);
+                    tableData.push([cpac, cpData]);
                 });
                 
                 // Add table with custom cell rendering for colored badges
                 doc.autoTable({
                     startY: 30,
-                    head: [['CPAC', 'CPs', 'Description']],
+                    head: [['CPAC', 'CPs']],
                     body: tableData,
                     theme: 'grid',
                     headStyles: { fillColor: [13, 110, 253] },
                     styles: { cellPadding: 2, fontSize: 10 },
                     columnStyles: {
                         0: { cellWidth: 20 },
-                        1: { cellWidth: 60 },
-                        2: { cellWidth: 'auto', fontSize: 7 }
+                        1: { cellWidth: 'auto' }
                     },
                     didDrawCell: function(data) {
                         // Custom rendering for CP badges in the second column
