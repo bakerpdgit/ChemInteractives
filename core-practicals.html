@@ -56,8 +56,16 @@
             background-color: #ffc107 !important;
             text-align: center;
         }
-        .cell-n {
+        .cell-n, .cell-r {
             background-color: #dc3545 !important;
+            text-align: center;
+        }
+        .cell-g {
+            background-color: #90ee90 !important;
+            text-align: center;
+        }
+        .cell-o {
+            background-color: #fd7e14 !important;
             text-align: center;
         }
         .cell-blank {
@@ -93,10 +101,19 @@
             color: black;
             border: 2px dashed black;
         }
-        .cp-badge-n {
+        .cp-badge-n, .cp-badge-r {
             background-color: #dc3545;
             color: white;
             border: 2px solid black;
+        }
+        .cp-badge-g {
+            background-color: #28a745;
+            color: white;
+        }
+        .cp-badge-o {
+            background-color: #fd7e14;
+            color: black;
+            border: 2px dashed black;
         }
         .cp-badge-blank {
             background-color: white;
@@ -144,6 +161,14 @@
                         <h5 class="card-title">Upload Spreadsheet</h5>
                         <input type="file" id="fileInput" class="form-control" accept=".xlsx,.xls">
                         <small class="form-text text-muted">Upload an Excel file (.xlsx or .xls) with student core practical data</small>
+
+                        <div class="mt-3">
+                            <label for="colorSchemeSelect" class="form-label">Select Color Scheme:</label>
+                            <select id="colorSchemeSelect" class="form-select">
+                                <option value="default">Original (y, wt, n)</option>
+                                <option value="secondary">Secondary (r, o, g)</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -309,6 +334,7 @@
             document.getElementById('studentFilter').addEventListener('change', handleStudentFilterChange);
             document.getElementById('assignmentFilter').addEventListener('change', renderTable);
             document.getElementById('labelFilter').addEventListener('change', renderTable);
+            document.getElementById('colorSchemeSelect').addEventListener('change', renderTable);
             document.getElementById('backToGridBtn').addEventListener('click', backToGridView);
             document.getElementById('exportStudentBtn').addEventListener('click', exportStudentPDF);
             document.getElementById('exportCombinedBtn').addEventListener('click', exportCombinedPDF);
@@ -404,19 +430,36 @@
                     
                     // Apply styling based on cell value
                     if (colIndex > 2) { // Only for data columns, not name/class columns
-                        if (cellValue === 'y') {
-                            td.className = 'cell-y';
-                            td.textContent = 'y';
-                        } else if (cellValue === 'wt') {
-                            td.className = 'cell-wt';
-                            td.textContent = 'wt';
-                        } else if (cellValue === 'n') {
-                            td.className = 'cell-n';
-                            td.textContent = 'n';
-                        } else {
-                            td.className = 'cell-blank';
-                            td.textContent = '';
+                        const colorScheme = document.getElementById('colorSchemeSelect').value;
+                        let displayValue = '';
+                        let cellClass = 'cell-blank';
+
+                        if (colorScheme === 'default') {
+                            if (cellValue === 'y') {
+                                cellClass = 'cell-y';
+                                displayValue = 'y';
+                            } else if (cellValue === 'wt') {
+                                cellClass = 'cell-wt';
+                                displayValue = 'wt';
+                            } else if (cellValue === 'n') {
+                                cellClass = 'cell-n';
+                                displayValue = 'n';
+                            }
+                        } else { // Secondary color scheme
+                            if (cellValue === 'g') {
+                                cellClass = 'cell-g';
+                                displayValue = 'g';
+                            } else if (cellValue === 'o') {
+                                cellClass = 'cell-o';
+                                displayValue = 'o';
+                            } else if (cellValue === 'r') {
+                                cellClass = 'cell-r';
+                                displayValue = 'r';
+                            }
                         }
+
+                        td.className = cellClass;
+                        td.textContent = displayValue;
                     } else if (colIndex === 0) {
                         // Make student name a clickable link
                         const studentName = cellValue === '0' ? '' : cellValue;
@@ -512,7 +555,14 @@
                 const cpData = cpacMap.get(cpac) || [];
                 cpData.forEach(({ cp, status }) => {
                     const badge = document.createElement('span');
-                    badge.className = `cp-badge cp-badge-${status || 'blank'}`;
+                    const colorScheme = document.getElementById('colorSchemeSelect').value;
+                    let statusClass = 'blank';
+                    if (colorScheme === 'default' && ['y', 'wt', 'n'].includes(status)) {
+                        statusClass = status;
+                    } else if (colorScheme === 'secondary' && ['r', 'o', 'g'].includes(status)) {
+                        statusClass = status;
+                    }
+                    badge.className = `cp-badge cp-badge-${statusClass}`;
                     badge.textContent = cp;
                     cpsCell.appendChild(badge);
                 });
@@ -532,18 +582,18 @@
             return name.replace(/[^a-zA-Z0-9]/g, '_');
         }
 
-        const VALID_CP_STATUSES = new Set(['y', 'wt', 'n']);
+        const VALID_CP_STATUSES = new Set(['y', 'wt', 'n', 'r', 'o', 'g']);
 
         function getCpStatusFromValue(value) {
-            // Return status if it's y, wt, or n, otherwise return empty string
+            // Return status if it's y, wt, n, r, o or g, otherwise return empty string
             return VALID_CP_STATUSES.has(value) ? value : '';
         }
 
         function formatCpWithStatus(cp, status) {
             // Format CP name with status indicator for PDF export
-            if (status === 'y') return `${cp} (✓)`;
-            if (status === 'wt') return `${cp} (WT)`;
-            if (status === 'n') return `${cp} (✗)`;
+            if (status === 'y' || status === 'g') return `${cp} (✓)`;
+            if (status === 'wt' || status === 'o') return `${cp} (WT)`;
+            if (status === 'n' || status === 'r') return `${cp} (✗)`;
             return cp;
         }
 
@@ -581,16 +631,18 @@
         }
 
         function getColorForStatus(status) {
+            const colorScheme = document.getElementById('colorSchemeSelect').value;
             // Return RGB color arrays matching the HTML view colors
-            if (status === 'y') return [40, 167, 69];      // Green (#28a745)
+            if (status === 'y' || status === 'g') return [40, 167, 69];      // Green (#28a745)
             if (status === 'wt') return [255, 193, 7];     // Yellow (#ffc107)
-            if (status === 'n') return [220, 53, 69];      // Red (#dc3545)
+            if (status === 'o') return [253, 126, 20];    // Orange (#fd7e14)
+            if (status === 'n' || status === 'r') return [220, 53, 69];      // Red (#dc3545)
             return [255, 255, 255];                         // White for blank
         }
 
         function getTextColorForStatus(status) {
             // Return text color (black or white) for readability
-            if (status === 'wt' || !status) return [0, 0, 0];  // Black text for yellow and white backgrounds
+            if (status === 'wt' || status === 'o' || !status) return [0, 0, 0];  // Black text for yellow and white backgrounds
             return [255, 255, 255];                              // White text for green and red backgrounds
         }
 
