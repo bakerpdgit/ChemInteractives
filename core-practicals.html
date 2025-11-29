@@ -632,17 +632,23 @@
 
         function getColorForStatus(status) {
             const colorScheme = document.getElementById('colorSchemeSelect').value;
-            // Return RGB color arrays matching the HTML view colors
-            if (status === 'y' || status === 'g') return [40, 167, 69];      // Green (#28a745)
-            if (status === 'wt') return [255, 193, 7];     // Yellow (#ffc107)
-            if (status === 'o') return [253, 126, 20];    // Orange (#fd7e14)
-            if (status === 'n' || status === 'r') return [220, 53, 69];      // Red (#dc3545)
-            return [255, 255, 255];                         // White for blank
+
+            if (colorScheme === 'default') {
+                if (status === 'y') return [40, 167, 69];      // Green
+                if (status === 'wt') return [255, 193, 7];     // Yellow
+                if (status === 'n') return [220, 53, 69];      // Red
+            } else { // secondary
+                if (status === 'g') return [40, 167, 69];      // Green
+                if (status === 'o') return [253, 126, 20];    // Orange
+                if (status === 'r') return [220, 53, 69];      // Red
+            }
+
+            return [255, 255, 255]; // White for blank or non-matching scheme
         }
 
         function getTextColorForStatus(status) {
             // Return text color (black or white) for readability
-            if (status === 'wt' || status === 'o' || !status) return [0, 0, 0];  // Black text for yellow and white backgrounds
+            if (status === 'wt' || status === 'o' || !status) return [0, 0, 0];  // Black text for yellow, orange, and white backgrounds
             return [255, 255, 255];                              // White text for green and red backgrounds
         }
 
@@ -695,19 +701,24 @@
                             const badgeMargin = 2;
                             
                             cpData.forEach(({ cp, status }) => {
-                                // Measure text width
-                                doc.setFontSize(9);
-                                const textWidth = doc.getTextWidth(cp);
-                                const badgeWidth = textWidth + (badgePadding * 2);
-                                
-                                // Check if badge fits in current line, if not wrap to next line
-                                if (xOffset + badgeWidth > cell.x + cell.width - cellPadding) {
-                                    xOffset = cellX + cellPadding;
-                                }
-                                
-                                // Draw badge background with rounded corners
-                                const bgColor = getColorForStatus(status);
-                                doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
+                                const colorScheme = document.getElementById('colorSchemeSelect').value;
+                                const belongsToScheme = (colorScheme === 'default' && ['y', 'wt', 'n'].includes(status)) ||
+                                                        (colorScheme === 'secondary' && ['r', 'o', 'g'].includes(status));
+
+                                if (belongsToScheme || !status) {
+                                    // Measure text width
+                                    doc.setFontSize(9);
+                                    const textWidth = doc.getTextWidth(cp);
+                                    const badgeWidth = textWidth + (badgePadding * 2);
+
+                                    // Check if badge fits in current line, if not wrap to next line
+                                    if (xOffset + badgeWidth > cell.x + cell.width - cellPadding) {
+                                        xOffset = cellX + cellPadding;
+                                    }
+
+                                    // Draw badge background with rounded corners
+                                    const bgColor = getColorForStatus(status);
+                                    doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
                                 
                                 // Draw rounded rectangle for badge
                                 const radius = 2;
@@ -718,13 +729,13 @@
                                     doc.setDrawColor(222, 226, 230); // Light gray border (#dee2e6)
                                     doc.setLineWidth(0.2);
                                     doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
-                                } else if (status === 'wt') {
+                                } else if (status === 'wt' || status === 'o') {
                                     doc.setDrawColor(0, 0, 0); // Black border
                                     doc.setLineWidth(0.5);
                                     doc.setLineDashPattern([1, 0.5], 0); // Dashed line
                                     doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
                                     doc.setLineDashPattern([], 0); // Reset dash pattern
-                                } else if (status === 'n') {
+                                } else if (status === 'n' || status === 'r') {
                                     doc.setDrawColor(0, 0, 0); // Black border
                                     doc.setLineWidth(0.5);
                                     doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
@@ -832,19 +843,24 @@
                                 const badgeMargin = 2;
                                 
                                 cpData.forEach(({ cp, status }) => {
-                                    // Measure text width
-                                    doc.setFontSize(9);
-                                    const textWidth = doc.getTextWidth(cp);
-                                    const badgeWidth = textWidth + (badgePadding * 2);
-                                    
-                                    // Check if badge fits in current line, if not wrap to next line
-                                    if (xOffset + badgeWidth > cell.x + cell.width - cellPadding) {
-                                        xOffset = cellX + cellPadding;
-                                    }
-                                    
-                                    // Draw badge background with rounded corners
-                                    const bgColor = getColorForStatus(status);
-                                    doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
+                                    const colorScheme = document.getElementById('colorSchemeSelect').value;
+                                    const belongsToScheme = (colorScheme === 'default' && ['y', 'wt', 'n'].includes(status)) ||
+                                                            (colorScheme === 'secondary' && ['r', 'o', 'g'].includes(status));
+
+                                    if (belongsToScheme || !status) {
+                                        // Measure text width
+                                        doc.setFontSize(9);
+                                        const textWidth = doc.getTextWidth(cp);
+                                        const badgeWidth = textWidth + (badgePadding * 2);
+
+                                        // Check if badge fits in current line, if not wrap to next line
+                                        if (xOffset + badgeWidth > cell.x + cell.width - cellPadding) {
+                                            xOffset = cellX + cellPadding;
+                                        }
+
+                                        // Draw badge background with rounded corners
+                                        const bgColor = getColorForStatus(status);
+                                        doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
                                     
                                     // Draw rounded rectangle for badge
                                     const radius = 2;
@@ -855,13 +871,13 @@
                                         doc.setDrawColor(222, 226, 230);  // Light gray border (#dee2e6)
                                         doc.setLineWidth(0.2);
                                         doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
-                                    } else if (status === 'wt') {
+                                    } else if (status === 'wt' || status === 'o') {
                                         doc.setDrawColor(0, 0, 0); // Black border
                                         doc.setLineWidth(0.5);
                                         doc.setLineDashPattern([1, 0.5], 0); // Dashed line
                                         doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
                                         doc.setLineDashPattern([], 0); // Reset dash pattern
-                                    } else if (status === 'n') {
+                                    } else if (status === 'n' || status === 'r') {
                                         doc.setDrawColor(0, 0, 0); // Black border
                                         doc.setLineWidth(0.5);
                                         doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
