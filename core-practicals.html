@@ -720,33 +720,33 @@
                                     const bgColor = getColorForStatus(status);
                                     doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
                                 
-                                // Draw rounded rectangle for badge
-                                const radius = 2;
-                                doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'F');
-                                
-                                // Draw border for blank badges
-                                if (!status) {
-                                    doc.setDrawColor(222, 226, 230); // Light gray border (#dee2e6)
-                                    doc.setLineWidth(0.2);
-                                    doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
-                                } else if (status === 'wt' || status === 'o') {
-                                    doc.setDrawColor(0, 0, 0); // Black border
-                                    doc.setLineWidth(0.5);
-                                    doc.setLineDashPattern([1, 0.5], 0); // Dashed line
-                                    doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
-                                    doc.setLineDashPattern([], 0); // Reset dash pattern
-                                } else if (status === 'n' || status === 'r') {
-                                    doc.setDrawColor(0, 0, 0); // Black border
-                                    doc.setLineWidth(0.5);
-                                    doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
-                                }
-                                
-                                // Draw text
-                                const textColor = getTextColorForStatus(status);
-                                doc.setTextColor(textColor[0], textColor[1], textColor[2]);
-                                doc.text(cp, xOffset + badgePadding, yOffset + badgeHeight - 1.5);
-                                
-                                xOffset += badgeWidth + badgeMargin;
+                                    // Draw rounded rectangle for badge
+                                    const radius = 2;
+                                    doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'F');
+                                    
+                                    // Draw border for blank badges
+                                    if (!status) {
+                                        doc.setDrawColor(222, 226, 230); // Light gray border (#dee2e6)
+                                        doc.setLineWidth(0.2);
+                                        doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
+                                    } else if (status === 'wt' || status === 'o') {
+                                        doc.setDrawColor(0, 0, 0); // Black border
+                                        doc.setLineWidth(0.5);
+                                        doc.setLineDashPattern([1, 0.5], 0); // Dashed line
+                                        doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
+                                        doc.setLineDashPattern([], 0); // Reset dash pattern
+                                    } else if (status === 'n' || status === 'r') {
+                                        doc.setDrawColor(0, 0, 0); // Black border
+                                        doc.setLineWidth(0.5);
+                                        doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
+                                    }
+                                    
+                                    // Draw text
+                                    const textColor = getTextColorForStatus(status);
+                                    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+                                    doc.text(cp, xOffset + badgePadding, yOffset + badgeHeight - 1.5);
+                                    
+                                    xOffset += badgeWidth + badgeMargin;
                                 }
                             });
                             
@@ -863,33 +863,33 @@
                                         const bgColor = getColorForStatus(status);
                                         doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
                                     
-                                    // Draw rounded rectangle for badge
-                                    const radius = 2;
-                                    doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'F');
-                                    
-                                    // Draw border for blank badges
-                                    if (!status) {
-                                        doc.setDrawColor(222, 226, 230);  // Light gray border (#dee2e6)
-                                        doc.setLineWidth(0.2);
-                                        doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
-                                    } else if (status === 'wt' || status === 'o') {
-                                        doc.setDrawColor(0, 0, 0); // Black border
-                                        doc.setLineWidth(0.5);
-                                        doc.setLineDashPattern([1, 0.5], 0); // Dashed line
-                                        doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
-                                        doc.setLineDashPattern([], 0); // Reset dash pattern
-                                    } else if (status === 'n' || status === 'r') {
-                                        doc.setDrawColor(0, 0, 0); // Black border
-                                        doc.setLineWidth(0.5);
-                                        doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
-                                    }
-                                    
-                                    // Draw text
-                                    const textColor = getTextColorForStatus(status);
-                                    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
-                                    doc.text(cp, xOffset + badgePadding, yOffset + badgeHeight - 1.5);
-                                    
-                                    xOffset += badgeWidth + badgeMargin;
+                                        // Draw rounded rectangle for badge
+                                        const radius = 2;
+                                        doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'F');
+                                        
+                                        // Draw border for blank badges
+                                        if (!status) {
+                                            doc.setDrawColor(222, 226, 230);  // Light gray border (#dee2e6)
+                                            doc.setLineWidth(0.2);
+                                            doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
+                                        } else if (status === 'wt' || status === 'o') {
+                                            doc.setDrawColor(0, 0, 0); // Black border
+                                            doc.setLineWidth(0.5);
+                                            doc.setLineDashPattern([1, 0.5], 0); // Dashed line
+                                            doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
+                                            doc.setLineDashPattern([], 0); // Reset dash pattern
+                                        } else if (status === 'n' || status === 'r') {
+                                            doc.setDrawColor(0, 0, 0); // Black border
+                                            doc.setLineWidth(0.5);
+                                            doc.roundedRect(xOffset, yOffset, badgeWidth, badgeHeight, radius, radius, 'S');
+                                        }
+                                        
+                                        // Draw text
+                                        const textColor = getTextColorForStatus(status);
+                                        doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+                                        doc.text(cp, xOffset + badgePadding, yOffset + badgeHeight - 1.5);
+                                        
+                                        xOffset += badgeWidth + badgeMargin;
                                     }
                                 });
                                 
